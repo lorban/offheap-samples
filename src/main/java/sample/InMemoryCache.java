@@ -22,8 +22,11 @@ import org.terracotta.offheapstore.paging.PageSource;
 import org.terracotta.offheapstore.paging.UpfrontAllocatingPageSource;
 import org.terracotta.offheapstore.storage.OffHeapBufferStorageEngine;
 import org.terracotta.offheapstore.storage.PointerSize;
+import org.terracotta.offheapstore.storage.portability.Portability;
 import org.terracotta.offheapstore.storage.portability.SerializablePortability;
 import org.terracotta.offheapstore.util.Factory;
+
+import java.io.Serializable;
 
 /**
  * @author Ludovic Orban
@@ -33,7 +36,7 @@ public class InMemoryCache {
   public static void main(String[] args) throws Exception {
     // total offheap memory allocation size
     long offheapSize = 128 * 1024 * 1024;
-    // the PageSource allocates offheap memory per chunk; no allocation greater than the chunk size can be served
+    // the PageSource allocates offheap memory per chunk
     int chunkSize = 16 * 1024 * 1024;
     // the page size is how much memory at a time the storage engine allocates
     int pageSize = 32 * 1024;
@@ -44,8 +47,8 @@ public class InMemoryCache {
 
     PageSource source = new UpfrontAllocatingPageSource(new OffHeapBufferSource(), offheapSize, chunkSize);
 
-    SerializablePortability keyPortability = new SerializablePortability();
-    SerializablePortability valuePortability = new SerializablePortability();
+    Portability<Serializable> keyPortability = new SerializablePortability();
+    Portability<Serializable> valuePortability = new SerializablePortability();
 
     Factory<OffHeapBufferStorageEngine<String, String>> storageEngineFactory = OffHeapBufferStorageEngine.createFactory(PointerSize.INT, source, pageSize, keyPortability, valuePortability, false, false);
 
@@ -59,7 +62,8 @@ public class InMemoryCache {
     System.out.println("DataSize: " + statistics.getDataSize());
     System.out.println("TableCapacity: " + statistics.getTableCapacity());
 
-    map.destroy();
+    System.out.println(map.get("1"));
+    System.out.println(map.get("2"));
   }
 
 }

@@ -21,10 +21,13 @@ import org.terracotta.offheapstore.disk.paging.MappedPageSource;
 import org.terracotta.offheapstore.paging.PageSource;
 import org.terracotta.offheapstore.storage.OffHeapBufferStorageEngine;
 import org.terracotta.offheapstore.storage.PointerSize;
+import org.terracotta.offheapstore.storage.portability.Portability;
 import org.terracotta.offheapstore.storage.portability.SerializablePortability;
 import org.terracotta.offheapstore.util.Factory;
 
 import java.io.File;
+import java.io.Serializable;
+import java.util.Map;
 
 /**
  * @author Ludovic Orban
@@ -32,29 +35,30 @@ import java.io.File;
 public class OnDiskTransient {
 
   public static void main(String[] args) throws Exception {
-    // total offheap memory allocation size
+    // total offheap allocation size
     long offheapSize = 128 * 1024 * 1024;
-    // the page size is how much memory at a time the storage engine allocates
+    // the page size is how much "memory" at a time the storage engine allocates
     int pageSize = 32 * 1024;
 
     PageSource source = new MappedPageSource(new File("offheap.data"), offheapSize);
 
-    SerializablePortability keyPortability = new SerializablePortability();
-    SerializablePortability valuePortability = new SerializablePortability();
+    Portability<Serializable> keyPortability = new SerializablePortability();
+    Portability<Serializable> valuePortability = new SerializablePortability();
 
     Factory<OffHeapBufferStorageEngine<String, String>> storageEngineFactory = OffHeapBufferStorageEngine.createFactory(PointerSize.INT, source, pageSize, keyPortability, valuePortability, false, false);
 
-    OffHeapHashMap<String, String> map = new OffHeapHashMap<String, String>(source, storageEngineFactory.newInstance());
+    Map<String, String> map = new OffHeapHashMap<String, String>(source, storageEngineFactory.newInstance());
 
     map.put("1", "one");
     map.put("2", "two");
 
-    MapInternals statistics = map;
+    MapInternals statistics = (MapInternals) map;
     System.out.println("AllocatedMemory: " + statistics.getAllocatedMemory());
     System.out.println("DataSize: " + statistics.getDataSize());
     System.out.println("TableCapacity: " + statistics.getTableCapacity());
 
-    map.destroy();
+    System.out.println(map.get("1"));
+    System.out.println(map.get("2"));
   }
 
 }
